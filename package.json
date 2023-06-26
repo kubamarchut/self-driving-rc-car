@@ -21,7 +21,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "sudo node acript.js"
+    "train": "sudo node controler.js",
+    "test": "sudo node test.js"
   },
   "author": "Jakub Marchut",
   "license": "ISC"
