@@ -1,3 +1,4 @@
+require('log-timestamp');
 const Gpio = require('pigpio').Gpio;
 
 // The number of microseconds it takes sound to travel 1cm at 20 degrees celcius
@@ -5,14 +6,14 @@ const MICROSECDONDS_PER_CM = 1e6/34321;
 
 const trigger = new Gpio(20, {mode: Gpio.OUTPUT});
 const echo = new Gpio(21, {mode: Gpio.INPUT, alert: true});
-var LED  = new Gpio(5, {mode: Gpio.OUTPUT});
-var LED2 = new Gpio(6, {mode: Gpio.OUTPUT});
-var motor1onoff = new Gpio(10, {mode: Gpio.OUTPUT});
-var motor11 = new Gpio(9, {mode: Gpio.OUTPUT});
-var motor12 = new Gpio(11, {mode: Gpio.OUTPUT});
-var motor2onoff = new Gpio(17, {mode: Gpio.OUTPUT});
-var motor21 = new Gpio(27, {mode: Gpio.OUTPUT});
-var motor22 = new Gpio(22, {mode: Gpio.OUTPUT});
+const LED  = new Gpio(5, {mode: Gpio.OUTPUT});
+const LED2 = new Gpio(6, {mode: Gpio.OUTPUT});
+const motor1onoff = new Gpio(10, {mode: Gpio.OUTPUT});
+const motor11 = new Gpio(9, {mode: Gpio.OUTPUT});
+const motor12 = new Gpio(11, {mode: Gpio.OUTPUT});
+const motor2onoff = new Gpio(17, {mode: Gpio.OUTPUT});
+const motor21 = new Gpio(27, {mode: Gpio.OUTPUT});
+const motor22 = new Gpio(22, {mode: Gpio.OUTPUT});
 
 trigger.digitalWrite(0); // Make sure trigger is low
 
@@ -76,3 +77,15 @@ let sequence = setInterval(function(){
       if(i >= mechs.length) i = 0;
     }, 500)
 }, 550)
+
+process.on('SIGINT', function() {
+    console.log("stopping test script");
+    
+    main("forward", "off");
+    main("back", "off");
+    main("left", "off");
+    main("right", "off");
+    main("head_light", "off");
+    main("tail_light", "off");
+    process.exit();
+});

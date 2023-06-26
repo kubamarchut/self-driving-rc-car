@@ -4,6 +4,7 @@
   "description": "",
   "main": "script.js",
   "dependencies": {
+    "log-timestamp": "^0.3.0",
     "matplotnode": "^0.4.2",
     "mjpeg-decoder": "^1.0.3",
     "mjpeg-server": "^0.3.0",
