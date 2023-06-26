@@ -42,14 +42,23 @@ STEERING_MOTOR.stop();
 HEAD_LIGHT.off();
 TAIL_LIGHT.off();
 
-let mechanisms = ["forward", "back", "right", "left", "head_light", "tail_light"];
-let i = 0;
-setInterval(function () {
-	test(mechanisms[i]);
-	console.log(mechanisms[i] + " test")
-	i++;
-	if (i >= mechanisms.length) {
-		console.log("distance " + DISTANCE_SENSOR.distance);
-		i = 0;
-	}
-}, 550);
+HEAD_LIGHT.smooth();
+TAIL_LIGHT.smooth();
+setTimeout(() => { HEAD_LIGHT.stopSmooth(); HEAD_LIGHT.blink(63, 255, 4, 150) }, 2000);
+setTimeout(() => { TAIL_LIGHT.stopSmooth(); TAIL_LIGHT.blink(63, 255, 4, 150) }, 2000);
+
+setTimeout(mainTest, 3000)
+
+function mainTest() {
+	let mechanisms = ["forward", "back", "right", "left", "head_light", "tail_light"];
+	let i = 0;
+	setInterval(function () {
+		test(mechanisms[i]);
+		console.log(mechanisms[i] + " test")
+		i++;
+		if (i >= mechanisms.length) {
+			console.log("distance " + DISTANCE_SENSOR.distance);
+			i = 0;
+		}
+	}, 550);
+}
