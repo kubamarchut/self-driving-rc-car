@@ -1,32 +1,26 @@
 require('log-timestamp');
 
-const Gpio = require('pigpio').Gpio;
 const express = require('express');
 const fs = require('fs');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server, { 'pingInterval': 2000 });
+const DISTANCE_SENSOR = require('./distance_sensor').distanceSensor;
+const { DRIVE_MOTOR, STEERING_MOTOR } = require('./motors_controller');
 const { HEAD_LIGHT, TAIL_LIGHT } = require('./led_handler');
 const { stop } = require('./exit_handler');
+const getFormattedTime = require('./date_handler.js')
+
+DISTANCE_SENSOR.start();
+DISTANCE_SENSOR.setCallback = collisionAvoidance;
+let distance = DISTANCE_SENSOR.getAvgDistance;
+
+DRIVE_MOTOR.stop();
+STEERING_MOTOR.stop();
 
 const cv = require('opencv4nodejs');
 let FPS = 30
 const vCap = new cv.VideoCapture(0);
-
-const controlsTypes = ["forward", "back", "right", "left"]
-
-function addZero(num, length) {
-  num = String(num)
-  while (num.length < length) {
-    num = "0" + num
-  }
-  return num
-}
-
-function getMs() {
-  var date = new Date();
-  return date.getTime()
-}
 
 var current_state = {
   forward: 0,
@@ -44,40 +38,12 @@ function getControls() {
   }
 }
 
-function getFormattedTime(type) {
-  var today = new Date();
-  var y = today.getFullYear();
-  var m = addZero(today.getMonth() + 1, 2);
-  var d = addZero(today.getDate(), 2);
-  var h = addZero(today.getHours(), 2);
-  var mi = addZero(today.getMinutes(), 2);
-  var s = addZero(today.getSeconds(), 2);
-  var ms = addZero(today.getMilliseconds(), 3);
-
-  var output = d + "." + m + "." + y + "_" + h + "-" + mi + "-" + s
-  if (type != 'short') output += "-" + ms
-  return output;
-}
-
 function takePhoto(filename, directory) {
   const frame = vCap.read();
   image = cv.imencode('.jpeg', frame);
   console.log(dir);
   cv.imwrite(`${dir}/${filename}.jpg`, frame);
 }
-
-// The number of microseconds it takes sound to travel 1cm at 20 degrees celsius
-const MICROSECDONDS_PER_CM = 1e6 / 34321;
-
-const trigger = new Gpio(20, { mode: Gpio.OUTPUT });
-const echo = new Gpio(21, { mode: Gpio.INPUT, alert: true });
-
-var motor1onoff = new Gpio(10, { mode: Gpio.OUTPUT });
-var motor11 = new Gpio(9, { mode: Gpio.OUTPUT });
-var motor12 = new Gpio(11, { mode: Gpio.OUTPUT });
-var motor2onoff = new Gpio(17, { mode: Gpio.OUTPUT });
-var motor21 = new Gpio(27, { mode: Gpio.OUTPUT });
-var motor22 = new Gpio(22, { mode: Gpio.OUTPUT });
 
 app.use(express.static('frontend-controler'))
 server.listen(80);
@@ -116,41 +82,35 @@ function captureDate() {
       controlsList = []
     }, 2000)
   }
-  
+
 }
-
-
 
 function main(target, type) {
   var onOff = (type == "on") ? 1 : 0
   if (target == "forward") {
-    motor11.digitalWrite(1);
-    motor12.digitalWrite(0);
-    motor1onoff.digitalWrite(onOff);
-    
+    if (type == "on") DRIVE_MOTOR.forward();
+    else DRIVE_MOTOR.stop();
+
     current_state.forward = onOff
   }
   else if (target == "back") {
-    motor11.digitalWrite(0);
-    motor12.digitalWrite(1);
-    motor1onoff.digitalWrite(onOff);
-    
+    if (type == "on") DRIVE_MOTOR.backward();
+    else DRIVE_MOTOR.stop();
+
     TAIL_LIGHT.on((type == "on") ? 255 : lights_state);
-    
+
     current_state.back = onOff
   }
   else if (target == "right") {
-    motor21.digitalWrite(0);
-    motor22.digitalWrite(1);
-    motor2onoff.digitalWrite(onOff);
-    
+    if (type == "on") STEERING_MOTOR.right();
+    else STEERING_MOTOR.stop();
+
     current_state.right = onOff
   }
   else if (target == "left") {
-    motor21.digitalWrite(1);
-    motor22.digitalWrite(0);
-    motor2onoff.digitalWrite(onOff);
-    
+    if (type == "on") STEERING_MOTOR.left();
+    else STEERING_MOTOR.stop();
+
     current_state.left = onOff
   }
   else if (target == "head_light") {
@@ -170,73 +130,22 @@ function main(target, type) {
   }
 }
 
-function avg(arr) {
-  return (arr[0] + arr[1] + arr[2]) / 3
-}
-
-trigger.digitalWrite(0); // Make sure trigger is low
-
 var BRAKING_ACC = 100;
 var MARGIN_D = 5;
 
-// Trigger a distance measurement once per second{mode: Gpio.OUTPUT}
-setInterval(() => {
-  trigger.trigger(10, 1); // Set trigger high for 10 microseconds
-}, 100);
-
-let distance;
-let distance_old;
-let distances = new Array(3).fill(0);
-
-const watchHCSR04 = () => {
-  let startTick;
-
-  echo.on('alert', (level, tick) => {
-    if (level == 1) {
-      startTick = tick;
-    } else {
-      const endTick = tick;
-      const diff = (endTick >> 0) - (startTick >> 0); // Unsigned 32 bit arithmetic
-      distance_old = distance;
-      distance = (diff / 2 / MICROSECDONDS_PER_CM);
-      if (distance > 1 && distance < 1600) {
-        distance = distance
-      }
-      else {
-        distance = 400;
-      }
-      distances.shift();
-      distances.push(distance);
-      distance = avg(distances).toFixed(2);
-      collisionAvoidance();
-      /*distance = (distance < 0.5 || distance > 600) ? 'out of range' : distance
-      if(distance < 4){
-        main('forward', 'off')
-        main('back', 'on')
-      }
-      else if(distance < 4.1){
-        main('back', 'off')
-      }*/
-    }
-  });
-};
-
-
-watchHCSR04();
-
-function collisionAvoidance() {
-  pre_dis = 50 * Math.pow((distance_old - distance), 2) / BRAKING_ACC;
+function collisionAvoidance(distance, oldDistance) {
+  pre_dis = 50 * Math.pow((oldDistance - distance), 2) / BRAKING_ACC;
   pre_dis += MARGIN_D;
-  if (pre_dis > distance && (distance_old - distance) > 1 && distance < 50) {
-    emergencyBraking();
+  if (pre_dis > distance && (oldDistance - distance) > 1 && distance < 50) {
+    emergencyBraking(distance, oldDistance);
   }
   return pre_dis;
 }
-function emergencyBraking() {
+function emergencyBraking(distance, oldDistance) {
   main('forward', 'off');
   main('back', 'on');
   var breaking = setInterval(() => {
-    if (distance_old - distance < 5) {
+    if (oldDistance - distance < 5 || oldDistance == 101 || distance == 101) {
       main('back', 'off');
       console.log('emergency avoided')
       clearInterval(breaking);
@@ -263,7 +172,7 @@ io.on('connection', (socket) => {
   HEAD_LIGHT.blink(63, 255, 4, 150);
   TAIL_LIGHT.blink(63, 255, 4, 150);
 })
-
+// sending camera feed
 setInterval(() => {
   const frame = vCap.read();
   let image = frame.getRegion(new cv.Rect(0, 0, 640, 430)).resize(215, 320);
@@ -272,7 +181,8 @@ setInterval(() => {
   const strImg = image.toString('base64');
   io.emit('image', strImg);
 }, 1000 / FPS)
-
+//sending distance sensor
 setInterval(() => {
+  distance = DISTANCE_SENSOR.getAvgDistance;
   io.emit('distance', distance);
 }, 1000 / 10)

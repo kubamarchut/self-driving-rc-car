@@ -1,33 +1,51 @@
 const { DRIVE_MOTOR, STEERING_MOTOR } = require('./motors_controller');
 const { HEAD_LIGHT, TAIL_LIGHT } = require('./led_handler');
+const fs = require('fs');
 
-function main(target, onOff) {
+let current_state = {
+    forward: 0,
+    back: 0,
+    right: 0,
+    left: 0
+}
+
+function main(target, type) {
+    let onOff = (type == "on") ? 1 : 0
     if (target == "forward") {
-        if (onOff == "on") DRIVE_MOTOR.forward();
+        if (type == "on") DRIVE_MOTOR.forward();
         else DRIVE_MOTOR.stop();
+
+        current_state.forward = onOff
     }
     else if (target == "back") {
-        if (onOff == "on") DRIVE_MOTOR.backward();
+        if (type == "on") DRIVE_MOTOR.backward();
         else DRIVE_MOTOR.stop();
+
+        TAIL_LIGHT.on((type == "on") ? 255 : lights_state);
+
+        current_state.back = onOff
     }
     else if (target == "right") {
-        if (onOff == "on") STEERING_MOTOR.right();
+        if (type == "on") STEERING_MOTOR.right();
         else STEERING_MOTOR.stop();
+
+        current_state.right = onOff
     }
     else if (target == "left") {
-        if (onOff == "on") STEERING_MOTOR.left();
+        if (type == "on") STEERING_MOTOR.left();
         else STEERING_MOTOR.stop();
+
+        current_state.left = onOff
     }
     else if (target == "head_light") {
-        if (onOff == "on") HEAD_LIGHT.on();
-        else HEAD_LIGHT.off();
+        HEAD_LIGHT.on((type == "on") ? 255 : 63);
     }
     else if (target == "tail_light") {
-        if (onOff == "on") TAIL_LIGHT.on();
-        else TAIL_LIGHT.off();
+        lights_state = (type == "on") ? 255 : 63;
+        TAIL_LIGHT.on(lights_state);
     }
     else if (target == "record_data") {
-        capturingMode = (onOff == "on") ? true : false
+        capturingMode = (type == "on") ? true : false
         if (capturingMode) {
             fs.mkdirSync('./gathered_data/' + getFormattedTime('short'))
             dir = './gathered_data/' + getFormattedTime('short')
@@ -37,3 +55,4 @@ function main(target, onOff) {
 }
 
 exports.main = main;
+exports.current_state = current_state;

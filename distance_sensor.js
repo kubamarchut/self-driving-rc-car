@@ -18,6 +18,9 @@ class DistanceSensor {
         this.minMax = [2, 200];
         this.callback = callback;
     }
+    set setCallback(callback) {
+        this.callback = callback;
+    }
     start() {
         // Trigger a distance measurement once per second{mode: GPIO.OUTPUT}
         setInterval(() => {
