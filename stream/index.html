@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>RC car stream</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Roboto&display=swap');
+    html{
+      --led-color: #ff0;
+    }
+    body{
+      background: url('carbon_fibre.png');
+      font-size: 3em;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+    }
+    .led{
+    }
+    .diode{
+      position: absolute;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      display: block;
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+    }
+    .diode::before{
+      display: block;
+      z-index: 1;
+      border-radius: 50%;
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    .diode::after{
+      display: block;
+      z-index: 1000;
+      border-radius: 50%;
+      background: var(--led-color);
+      -webkit-box-shadow: 0px 0px 10px 2px var(--led-color);
+-moz-box-shadow: 0px 0px 10px 2px var(--led-color);
+box-shadow: 0px 0px 10px 2px var(--led-color);
+      animation: blink .625s infinite;
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .screen{
+      background: #000;
+      width: 100%;
+      height: 100%;
+    }
+    .screen img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .distance{
+      font-size: 2em;
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      color: #fff;
+      font-family: 'Inconsolata', monospace;
+    }
+    .blinking {
+      animation: 1s blink ease infinite;
+    }
+    @keyframes blink {
+      from, to {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+  </head>
+  <body>
+      <div class="led">
+        <span class="diode"></span>
+      </div>
+      <div class="screen">
+        <img src="http://192.168.0.50/stream.mjpg">
+      </div>
+      <div class="distance">
+      </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
+    </script>
+    <script>
+    const Distance = document.querySelector('.distance');
+      // if user is running mozilla then use it's built-in WebSocket
+      window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+      var connection = new WebSocket('ws://192.168.0.50:1337');
+
+      connection.onopen = function () {
+        var html = document.getElementsByTagName('html')[0];
+        html.style.cssText = "--led-color: #0f0";
+      };
+
+      connection.onerror = function (error) {
+        var html = document.getElementsByTagName('html')[0];
+        html.style.cssText = "--led-color: #f00";
+      };
+
+      connection.onmessage = function (message) {
+        // try to decode json (I assume that each message
+        // from server is json)
+        try {
+          var json = JSON.parse(message.data);
+        } catch (e) {
+          console.log('This doesn\'t look like a valid JSON: ',
+              message.data);
+          return;
+        }
+        var distanceFromServer = message.data.toString();
+        while(distanceFromServer.length < 6){
+          distanceFromServer = '0' + distanceFromServer;
+        }
+        Distance.innerHTML = distanceFromServer;
+      };
+</script>
+  </body>
+</html>
