@@ -13,13 +13,14 @@ class CarLight {
         this.rept = 4;
         this.delay = 150;
     }
-    on() {
-        this.ledPin.digitalWrite(1);
+    on(intensity) {
+        if (arguments.length == 0) this.ledPin.digitalWrite(1);
+        else this.ledPin.pwmWrite(intensity);
     }
     off() {
         this.ledPin.digitalWrite(0);
     }
-    blink(min = this.min, max = this.max, rept = 4, delay = 150) {
+    blink(min = this.min, max = this.max, rept = this.rept, delay = this.delay) {
         this.i = 0;
         this.min = min;
         this.max = max;

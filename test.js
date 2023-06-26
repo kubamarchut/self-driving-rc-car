@@ -3,34 +3,9 @@ require('log-timestamp');
 const DISTANCE_SENSOR = require('./distance_sensor').distanceSensor;
 const { DRIVE_MOTOR, STEERING_MOTOR } = require('./motors_controller');
 const { HEAD_LIGHT, TAIL_LIGHT } = require('./led_handler');
+const { main } = require('./car_steering_handler');
 require('./exit_handler');
 
-function main(target, onOff) {
-	if (target == "forward") {
-		if (onOff == "on") DRIVE_MOTOR.forward();
-		else DRIVE_MOTOR.stop();
-	}
-	else if (target == "back") {
-		if (onOff == "on") DRIVE_MOTOR.backward();
-		else DRIVE_MOTOR.stop();
-	}
-	else if (target == "right") {
-		if (onOff == "on") STEERING_MOTOR.right();
-		else STEERING_MOTOR.stop();
-	}
-	else if (target == "left") {
-		if (onOff == "on") STEERING_MOTOR.left();
-		else STEERING_MOTOR.stop();
-	}
-	else if (target == "head_light") {
-		if (onOff == "on") HEAD_LIGHT.on();
-		else HEAD_LIGHT.off();
-	}
-	else if (target == "tail_light") {
-		if (onOff == "on") TAIL_LIGHT.on();
-		else TAIL_LIGHT.off();
-	}
-}
 function test(mech) {
 	main(mech, "on");
 	setTimeout(function () { main(mech, "off") }, 500)
@@ -57,7 +32,7 @@ function mainTest() {
 		console.log(mechanisms[i] + " test")
 		i++;
 		if (i >= mechanisms.length) {
-			console.log("distance " + DISTANCE_SENSOR.distance);
+			console.log("distance " + DISTANCE_SENSOR.getDistance + " averaged: " + DISTANCE_SENSOR.getAvgDistance);
 			i = 0;
 		}
 	}, 550);
