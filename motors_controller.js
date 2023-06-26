@@ -1,45 +1,45 @@
-
 const GPIO = require('pigpio').Gpio;
 
 // setting up motors pins
-const MOTOR_DRIVE_ON_OFF = new GPIO(10, { mode: GPIO.OUTPUT });
-const MOTOR_DRIVE_1 = new GPIO(9, { mode: GPIO.OUTPUT });
-const MOTOR_DRIVE_2 = new GPIO(11, { mode: GPIO.OUTPUT });
-const MOTOR_STEERING_ON_OFF = new GPIO(17, { mode: GPIO.OUTPUT });
-const MOTOR_STEERING_1 = new GPIO(27, { mode: GPIO.OUTPUT });
-const MOTOR_STEERING_2 = new GPIO(22, { mode: GPIO.OUTPUT });
+const MOTOR_DRIVE_PINS = [10, 9, 11];
+const MOTOR_STEERING_PINS = [17, 27, 22];
 
-const DRIVE_MOTOR = {
-    forward: function () {
-        MOTOR_DRIVE_1.digitalWrite(1);
-        MOTOR_DRIVE_2.digitalWrite(0);
-        MOTOR_DRIVE_ON_OFF.digitalWrite(1);
-    },
-    backward: function () {
-        MOTOR_DRIVE_1.digitalWrite(0);
-        MOTOR_DRIVE_2.digitalWrite(1);
-        MOTOR_DRIVE_ON_OFF.digitalWrite(1);
-    },
-    stop: function () {
-        MOTOR_DRIVE_ON_OFF.digitalWrite(0);
+class MotorController {
+    constructor(onOffPin, firstPin, secondPin) {
+        this.onOffPin = new GPIO(onOffPin, { mode: GPIO.OUTPUT });
+        this.firstPin = new GPIO(firstPin, { mode: GPIO.OUTPUT });
+        this.secondPin = new GPIO(secondPin, { mode: GPIO.OUTPUT });
+    }
+    stop() {
+        this.onOffPin.digitalWrite(0);
     }
 }
 
-const STEERING_MOTOR = {
-    right: function () {
-        MOTOR_STEERING_1.digitalWrite(0);
-        MOTOR_STEERING_2.digitalWrite(1);
-        MOTOR_STEERING_ON_OFF.digitalWrite(1);
-    },
-    left: function () {
-        MOTOR_STEERING_1.digitalWrite(1);
-        MOTOR_STEERING_2.digitalWrite(0);
-        MOTOR_STEERING_ON_OFF.digitalWrite(1);
-    },
-    stop: function () {
-        MOTOR_STEERING_ON_OFF.digitalWrite(0);
+class DriveController extends MotorController {
+    forward() {
+        this.firstPin.digitalWrite(1);
+        this.secondPin.digitalWrite(0);
+        this.onOffPin.digitalWrite(1);
+    }
+    backward() {
+        this.firstPin.digitalWrite(0);
+        this.secondPin.digitalWrite(1);
+        this.onOffPin.digitalWrite(1);
     }
 }
 
-exports.DRIVE_MOTOR = DRIVE_MOTOR;
-exports.STEERING_MOTOR = STEERING_MOTOR;
+class SteerController extends MotorController {
+    right() {
+        this.firstPin.digitalWrite(0);
+        this.secondPin.digitalWrite(1);
+        this.onOffPin.digitalWrite(1);
+    }
+    left() {
+        this.firstPin.digitalWrite(1);
+        this.secondPin.digitalWrite(0);
+        this.onOffPin.digitalWrite(1);
+    }
+}
+
+exports.DRIVE_MOTOR = new DriveController(...MOTOR_DRIVE_PINS);
+exports.STEERING_MOTOR = new SteerController(...MOTOR_STEERING_PINS);
