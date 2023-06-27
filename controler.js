@@ -4,13 +4,13 @@ const fs = require('fs');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server, { 'pingInterval': 2000 });
-const DISTANCE_SENSOR = require('./distance_sensor').distanceSensor;
-const { DRIVE_MOTOR, STEERING_MOTOR } = require('./motors_controller');
-const { HEAD_LIGHT, TAIL_LIGHT } = require('./led_handler');
-const { collisionAvoidance } = require('./emergency_braking')
-const { FPS, takePhoto, getImgToStream } = require('./camera_handler.js');
-const { stop } = require('./exit_handler');
-const { getFormattedTime } = require('./date_handler.js');
+const DISTANCE_SENSOR = require('./handlers/distance_sensor').distanceSensor;
+const { DRIVE_MOTOR, STEERING_MOTOR } = require('./handlers/motors_controller');
+const { HEAD_LIGHT, TAIL_LIGHT } = require('./handlers/led_handler');
+const { collisionAvoidance } = require('./handlers/emergency_braking')
+const { FPS, takePhoto, getImgToStream } = require('./handlers/camera_handler.js');
+const { stop } = require('./handlers/exit_handler');
+const { getFormattedTime } = require('./handlers/date_handler.js');
 
 DISTANCE_SENSOR.start();
 //DISTANCE_SENSOR.setCallback = collisionAvoidance;

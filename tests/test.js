@@ -1,10 +1,10 @@
 require('log-timestamp');
 
-const DISTANCE_SENSOR = require('./distance_sensor').distanceSensor;
-const { DRIVE_MOTOR, STEERING_MOTOR } = require('./motors_controller');
-const { HEAD_LIGHT, TAIL_LIGHT } = require('./led_handler');
-const { main } = require('./car_steering_handler');
-require('./exit_handler');
+const DISTANCE_SENSOR = require('../handlers/distance_sensor').distanceSensor;
+const { DRIVE_MOTOR, STEERING_MOTOR } = require('../handlers/motors_controller');
+const { HEAD_LIGHT, TAIL_LIGHT } = require('../handlers/led_handler');
+const { main } = require('../handlers/car_steering_handler');
+require('../handlers/exit_handler');
 
 function test(mech) {
 	main(mech, "on");

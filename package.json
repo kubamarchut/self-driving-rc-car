@@ -23,7 +23,7 @@
   "devDependencies": {},
   "scripts": {
     "train": "sudo node controler.js",
-    "test": "sudo node test.js"
+    "test": "sudo node tests/test.js"
   },
   "author": "Jakub Marchut",
   "license": "ISC"
