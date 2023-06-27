@@ -1,5 +1,7 @@
-var BRAKING_ACC = 100;
-var MARGIN_D = 5;
+const { DRIVE_MOTOR } = require('./motors_controller');
+
+const BRAKING_ACC = 100;
+const MARGIN_D = 5;
 
 function collisionAvoidance(distance, oldDistance) {
   pre_dis = 50 * Math.pow((oldDistance - distance), 2) / BRAKING_ACC;
@@ -10,11 +12,11 @@ function collisionAvoidance(distance, oldDistance) {
   return pre_dis;
 }
 function emergencyBraking(distance, oldDistance) {
-  main('forward', 'off');
-  main('back', 'on');
-  var breaking = setInterval(() => {
+  DRIVE_MOTOR.stop();
+  DRIVE_MOTOR.backward()
+  let breaking = setInterval(() => {
     if (oldDistance - distance < 5) {
-      main('back', 'off');
+      DRIVE_MOTOR.stop();
       console.log('emergency avoided')
       clearInterval(breaking);
     }
