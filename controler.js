@@ -1,5 +1,4 @@
 require('log-timestamp');
-
 const express = require('express');
 const fs = require('fs');
 const app = express();
@@ -17,13 +16,9 @@ DISTANCE_SENSOR.start();
 DISTANCE_SENSOR.setCallback = collisionAvoidance;
 let distance = DISTANCE_SENSOR.getAvgDistance;
 
-DRIVE_MOTOR.stop();
-STEERING_MOTOR.stop();
+stop();
 
 TAIL_LIGHT.light_state = 127
-HEAD_LIGHT.off();
-TAIL_LIGHT.off();
-
 HEAD_LIGHT.on(63);
 TAIL_LIGHT.on(TAIL_LIGHT.light_state);
 
@@ -36,13 +31,10 @@ var current_state = {
   right: 0,
   left: 0
 }
-
-app.use(express.static('frontend-controler'))
-server.listen(80);
-
 var dir = ''
 var capturingMode = false
 var controlsList = []
+
 function captureDate() {
   if (capturingMode) {
     var controls = current_state
@@ -68,7 +60,7 @@ function captureDate() {
 }
 
 function main(target, type) {
-  var onOff = (type == "on") ? 1 : 0
+  let onOff = (type == "on") ? 1 : 0
   if (target == "forward") {
     if (type == "on") DRIVE_MOTOR.forward();
     else DRIVE_MOTOR.stop();
@@ -112,6 +104,11 @@ function main(target, type) {
   }
 }
 
+// starting server for controller communication
+app.use(express.static('frontend-controler'))
+server.listen(80);
+
+// handling communication with controller
 io.on('connection', (socket) => {
   socket.on('controls', msg => {
     var messageCon = JSON.parse(msg);
@@ -128,11 +125,13 @@ io.on('connection', (socket) => {
   HEAD_LIGHT.blink(63, 255, 4, 150);
   TAIL_LIGHT.blink(63, 255, 4, 150);
 })
+
 // sending camera feed
 setInterval(() => {
   const strImg = getImgToStream().toString('base64');
   io.emit('image', strImg);
 }, 1000 / FPS)
+
 //sending distance sensor
 setInterval(() => {
   distance = DISTANCE_SENSOR.getAvgDistance;
