@@ -37,7 +37,7 @@ class DistanceSensor {
 
                 let distance = (diff / 2 / MICROSECONDS_PER_CM);
                 if (distance < this.minMax[0] || distance > this.minMax[1]) {
-                    distance = (2 + 200) / 2;
+                    distance = (this.minMax[0] + this.minMax[1]) / 2;
                 }
                 this.distances.shift();
                 this.distances.push(distance);
