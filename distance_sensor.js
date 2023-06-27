@@ -15,7 +15,7 @@ class DistanceSensor {
         this.sensorEcho = new GPIO(echoPin, { mode: GPIO.INPUT, alert: true });
         this.sensorTrigger.digitalWrite(0);
         this.distances = new Array(3).fill(0);
-        this.minMax = [2, 200];
+        this.minMax = [2, 400];
         this.callback = callback;
     }
     set setCallback(callback) {
@@ -23,8 +23,12 @@ class DistanceSensor {
     }
     start() {
         // Trigger a distance measurement once per second{mode: GPIO.OUTPUT}
+        let echoDetected = true;
         setInterval(() => {
-            this.sensorTrigger.trigger(10, 1); // Set trigger high for 10 microseconds
+            if (echoDetected){
+                this.sensorTrigger.trigger(10, 1); // Set trigger high for 10 microseconds
+                echoDetected = false;
+            }
         }, 100);
 
         let startTick;
@@ -32,12 +36,13 @@ class DistanceSensor {
             if (level == 1) {
                 startTick = tick;
             } else {
+                echoDetected = true;
                 const endTick = tick;
                 const diff = (endTick >> 0) - (startTick >> 0); // Unsigned 32 bit arithmetic
 
                 let distance = (diff / 2 / MICROSECONDS_PER_CM);
                 if (distance < this.minMax[0] || distance > this.minMax[1]) {
-                    distance = this.minMax[1];
+                    distance = Infinity;
                 }
                 this.distances.shift();
                 this.distances.push(distance);

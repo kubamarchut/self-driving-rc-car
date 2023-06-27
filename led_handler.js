@@ -5,13 +5,14 @@ const HEAD_LIGHT_LED = 5;
 const TAIL_LIGHT_LED = 6;
 
 class CarLight {
-    constructor(pin) {
+    constructor(pin, light_state=255) {
         this.ledPin = new GPIO(pin, { mode: GPIO.OUTPUT });
         this.min = 63;
         this.max = 255;
         this.i = 0;
         this.rept = 4;
         this.delay = 150;
+        this.light_state = light_state;
     }
     on(intensity) {
         if (arguments.length == 0) this.ledPin.digitalWrite(1);
@@ -26,11 +27,11 @@ class CarLight {
         this.max = max;
         this.rept = rept;
         this.delay = delay;
-        this.blinkLoop();
+        this.blinkLoop(min, max);
     }
-    blinkLoop() {
+    blinkLoop(min, max) {
         setTimeout(() => {
-            this.ledPin.pwmWrite((this.i % 2 == 0) ? this.min : this.max);
+            this.ledPin.pwmWrite((this.i % 2 == 0) ? min : max);
             this.i++;
             if (this.i <= this.rept) {
                 this.blinkLoop();

@@ -48,12 +48,12 @@ function takePhoto(filename, directory) {
 app.use(express.static('frontend-controler'))
 server.listen(80);
 
-let lights_state = 127
+TAIL_LIGHT.light_state = 127
 HEAD_LIGHT.off();
 TAIL_LIGHT.off();
 
 HEAD_LIGHT.on(63);
-TAIL_LIGHT.on(lights_state);
+TAIL_LIGHT.on(TAIL_LIGHT.light_state);
 
 HEAD_LIGHT.smooth();
 TAIL_LIGHT.smooth();

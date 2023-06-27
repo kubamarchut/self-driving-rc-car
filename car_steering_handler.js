@@ -21,7 +21,7 @@ function main(target, type) {
         if (type == "on") DRIVE_MOTOR.backward();
         else DRIVE_MOTOR.stop();
 
-        TAIL_LIGHT.on((type == "on") ? 255 : lights_state);
+        TAIL_LIGHT.on((type == "on") ? 255 : TAIL_LIGHT.light_state);
 
         current_state.back = onOff
     }
@@ -41,8 +41,8 @@ function main(target, type) {
         HEAD_LIGHT.on((type == "on") ? 255 : 63);
     }
     else if (target == "tail_light") {
-        lights_state = (type == "on") ? 255 : 63;
-        TAIL_LIGHT.on(lights_state);
+        TAIL_LIGHT.light_state = (type == "on") ? 255 : 63;
+        TAIL_LIGHT.on(TAIL_LIGHT.light_state);
     }
     else if (target == "record_data") {
         capturingMode = (type == "on") ? true : false
