@@ -7,11 +7,7 @@ const TAIL_LIGHT_LED = 6;
 class CarLight {
     constructor(pin, light_state=255) {
         this.ledPin = new GPIO(pin, { mode: GPIO.OUTPUT });
-        this.min = 63;
-        this.max = 255;
         this.i = 0;
-        this.rept = 4;
-        this.delay = 150;
         this.light_state = light_state;
     }
     on(intensity) {
@@ -21,33 +17,29 @@ class CarLight {
     off() {
         this.ledPin.digitalWrite(0);
     }
-    blink(min = this.min, max = this.max, rept = this.rept, delay = this.delay) {
+    blink(min = 63, max = 255, rept = 4, delay = 150) {
         this.i = 0;
-        this.min = min;
-        this.max = max;
-        this.rept = rept;
-        this.delay = delay;
-        this.blinkLoop(min, max);
+        this.blinkLoop(min, max, rept, delay);
     }
-    blinkLoop(min, max) {
+    blinkLoop(min, max, rept, delay) {
         setTimeout(() => {
             this.ledPin.pwmWrite((this.i % 2 == 0) ? min : max);
             this.i++;
-            if (this.i <= this.rept) {
-                this.blinkLoop();
+            if (this.i <= rept) {
+                this.blinkLoop(min, max, rept, delay);
             }
-        }, this.delay)
+        }, delay)
     }
-    smooth() {
-        let dutyCycle = 63;
-        let incCycle = 5;
+    smooth(start = 63, step = 5) {
+        let dutyCycle = start;
+        let incCycle = step;
 
         this.blinkingInterval = setInterval(() => {
             dutyCycle += incCycle;
             this.ledPin.pwmWrite(dutyCycle);
 
-            if (dutyCycle > 250) incCycle = -5;
-            else if (dutyCycle < 15) incCycle = 5;
+            if (dutyCycle > 250) incCycle = -step;
+            else if (dutyCycle < 15) incCycle = step;
         }, 20);
     }
     stopSmooth() {
